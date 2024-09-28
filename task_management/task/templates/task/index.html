@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>タスク一覧</title>
+    <!-- Bootstrap CSSを使用する場合（モーダル用） -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>タスク一覧</h1>
+        <p>進行度: {{ progress.completed }}/{{ progress.total }}</p>
+        <form method="get">
+            <select name="sort_by" onchange="this.form.submit()">
+                <option value="status" {% if sort_by == 'status' %}selected{% endif %}>ステータス順</option>
+                <option value="due_date" {% if sort_by == 'due_date' %}selected{% endif %}>締切順</option>
+                <option value="priority" {% if sort_by == 'priority' %}selected{% endif %}>優先度順</option>
+                <option value="category" {% if sort_by == 'category' %}selected{% endif %}>カテゴリ順</option>
+            </select>
+        </form>
+        <ul>
+            {% for task in tasks %}
+                <li>{{ task.title }} - {{ task.get_status_display }} - {{ task.due_date }}</li>
+            {% endfor %}
+        </ul>
+
+        <!-- タスク作成ボタン -->
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#taskModal">
+            新しいタスクを作成
+        </button>
+
+        <!-- モーダル -->
+        <div class="modal fade" id="taskModal" tabindex="-1" role="dialog" aria-labelledby="taskModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="taskModalLabel">タスクを作成</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="taskForm" method="post" action="{% url 'task_create' %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="title">タイトル</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="detail">詳細</label>
+                                <textarea class="form-control" id="detail" name="detail"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="due_date">締切日</label>
+                                <input type="date" class="form-control" id="due_date" name="due_date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="priority">優先度</label>
+                                <select class="form-control" id="priority" name="priority">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="category">カテゴリ</label>
+                                <select class="form-control" id="category" name="category">
+                                    {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.category_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 必要なJavaScript（Bootstrap依存） -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
