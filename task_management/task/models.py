@@ -26,9 +26,10 @@ class Task(models.Model):
         (3, '完了')
     ])
     start_date = models.DateField(null=True, blank=True) # 着手日
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # タスクの所有者
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)  # タスクの所有者
 
     class Meta:
+        ordering = ('-status',)
         constraints = [
             models.CheckConstraint(check=models.Q(priority__gte=1, priority__lte=5), name='priority_range')
         ]
