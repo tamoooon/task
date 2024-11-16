@@ -29,7 +29,7 @@
             margin-bottom: 20px;
             font-weight: bold;
         }
-        .btn-primary, .btn-danger {
+        .btn-primary, .btn-danger, .btn-secondary {
             margin-top: 10px;
         }
         .task-list {
@@ -39,9 +39,16 @@
         .task-list li {
             padding: 10px;
             border-bottom: 1px solid #eaeaea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .task-list li:last-child {
             border-bottom: none;
+        }
+        .task-actions {
+            display: flex;
+            gap: 10px;
         }
         .modal-title {
             color: #007bff;
@@ -86,7 +93,18 @@
 
         <ul class="task-list mt-3">
             {% for task in tasks %}
-                <li>{{ task.title }} - ステータス: {{ task.get_status_display }} - 締切日: {{ task.due_date }}</li>
+                <li>
+                    <div>
+                        {{ task.title }} - ステータス: {{ task.get_status_display }} - 締切日: {{ task.due_date }}
+                    </div>
+                    <div class="task-actions">
+                        {% if task.task_id %}
+                        <a href="{% url 'task_edit' task.task_id %}" class="btn btn-sm btn-secondary">編集</a>
+                        <a href="{% url 'task_delete' task.task_id %}" class="btn btn-sm btn-danger" 
+                           onclick="return confirm('本当に削除しますか？');">削除</a>
+                        {% endif %}
+                    </div>
+                </li>
             {% endfor %}
         </ul>
 

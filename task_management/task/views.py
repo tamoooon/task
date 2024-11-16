@@ -81,3 +81,26 @@ def task_create(request):
             print(f'formerror:{context}')
             return render(request, 'task/index.html', context)
     return redirect(to='/task/')
+
+@login_required
+def task_edit(request, task_id):
+    task = Task.objects.filter(user=request.user).filter(task_id=task_id).first()
+    if not task:
+        return redirect(to='/task/')
+
+    if request.method == "POST":
+        form = TaskForm(request.POST, instance=task)
+        if form.is_valid():
+            form.save()
+            return redirect(to='/task/')
+    else:
+        form = TaskForm(instance=task)
+
+    return render(request, 'task/update.html', {'form': form, 'task': task})
+
+@login_required
+def task_delete(request, task_id):
+    task = Task.objects.filter(user=request.user).filter(task_id=task_id).first()
+    if task:
+        task.delete()
+    return redirect(to='/task/')

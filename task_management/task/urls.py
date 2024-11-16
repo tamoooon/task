@@ -11,4 +11,6 @@ urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('edit/<int:task_id>/', views.task_edit, name='task_edit'),
+    path('delete/<int:task_id>/', views.task_delete, name='task_delete'),
 ]
