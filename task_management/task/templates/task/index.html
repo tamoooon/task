@@ -1,31 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>タスク一覧</title>
-    <!-- Bootstrap CSSを使用する場合（モーダル用） -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f8ff; /* 背景色 */
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .progress-text {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .btn-primary, .btn-danger {
+            margin-top: 10px;
+        }
+        .task-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .task-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .task-list li:last-child {
+            border-bottom: none;
+        }
+        .modal-title {
+            color: #007bff;
+        }
+        .form-control {
+            margin-bottom: 15px;
+        }
+        .footer-text {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
+
     <div class="container">
         <h1>タスク一覧</h1>
-        <p>進行度: {{ progress.completed }}/{{ progress.total }}</p>
+        <p class="progress-text">進行度: {{ progress.completed }}/{{ progress.total }}</p>
 
-        <!-- ログイン状態の確認 -->
         {% if user.is_authenticated %}
-            <p>ようこそ、{{ user.username }}さん</p>
-            <!-- ログアウトボタン -->
-            <form method="post" action="{% url 'logout' %}">
+            <p class="text-center">ようこそ、<strong>{{ user.username }}</strong>さん</p>
+            <form method="post" action="{% url 'logout' %}" class="text-center">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">ログアウト</button>
             </form>
         {% else %}
-            <p>ログインしていません</p>
-            <a href="{% url 'login' %}" class="btn btn-primary">ログイン</a>
+            <p class="text-center">ログインしていません</p>
+            <div class="text-center">
+                <a href="{% url 'login' %}" class="btn btn-primary">ログイン</a>
+            </div>
         {% endif %}
 
-        <!-- タスクソートセレクター -->
-        <form method="get">
-            <select name="sort_by" onchange="this.form.submit()">
+        <form method="get" class="text-center mt-3">
+            <label for="sort_by" class="form-label">タスクを並び替える:</label>
+            <select name="sort_by" id="sort_by" class="form-select w-auto d-inline-block" onchange="this.form.submit()">
                 <option value="status" {% if sort_by == 'status' %}selected{% endif %}>ステータス順</option>
                 <option value="due_date" {% if sort_by == 'due_date' %}selected{% endif %}>締切順</option>
                 <option value="priority" {% if sort_by == 'priority' %}selected{% endif %}>優先度順</option>
@@ -33,75 +84,61 @@
             </select>
         </form>
 
-        <!-- タスクリスト -->
-        <ul>
+        <ul class="task-list mt-3">
             {% for task in tasks %}
                 <li>{{ task.title }} - ステータス: {{ task.get_status_display }} - 締切日: {{ task.due_date }}</li>
             {% endfor %}
         </ul>
 
-        <!-- タスク作成ボタン -->
         {% if user.is_authenticated %}
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#taskModal">
-                新しいタスクを作成
-            </button>
+            <div class="text-center mt-3">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#taskModal">
+                    新しいタスクを作成
+                </button>
+            </div>
         {% else %}
-            <p>タスクを作成するにはログインしてください。</p>
+            <p class="text-center">タスクを作成するにはログインしてください。</p>
         {% endif %}
 
         <!-- モーダル（新規タスク作成用） -->
-        <div class="modal fade" id="taskModal" tabindex="-1" role="dialog" aria-labelledby="taskModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+        <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="taskModalLabel">タスクを作成</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form id="taskForm" method="post" action="{% url 'task_create' %}">
                             {% csrf_token %}
-                            <div class="form-group">
-                                <label for="title">タイトル</label>
-                                <input type="text" class="form-control" id="title" name="title" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="detail">詳細</label>
-                                <textarea class="form-control" id="detail" name="detail"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="due_date">締切日</label>
-                                <input type="date" class="form-control" id="due_date" name="due_date" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="priority">優先度</label>
-                                <select class="form-control" id="priority" name="priority">
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5">5</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="category">カテゴリ</label>
-                                <select class="form-control" id="category" name="category">
-                                    {% for category in categories %}
-                                        <option value="{{ category.category_id }}">{{ category.category_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="status">ステータス</label>
-                                <select class="form-control" id="status" name="status">
-                                    <option value="0">未着手</option>
-                                    <option value="1">進行中</option>
-                                    <option value="2">保留</option>
-                                    <option value="3">完了</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">保存</button>
+                            <label for="title">タイトル</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                            <label for="detail">詳細</label>
+                            <textarea class="form-control" id="detail" name="detail"></textarea>
+                            <label for="due_date">締切日</label>
+                            <input type="date" class="form-control" id="due_date" name="due_date" required>
+                            <label for="priority">優先度</label>
+                            <select class="form-control" id="priority" name="priority">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                            <label for="category">カテゴリ</label>
+                            <select class="form-control" id="category" name="category">
+                                {% for category in categories %}
+                                    <option value="{{ category.category_id }}">{{ category.category_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="status">ステータス</label>
+                            <select class="form-control" id="status" name="status">
+                                <option value="0">未着手</option>
+                                <option value="1">進行中</option>
+                                <option value="2">保留</option>
+                                <option value="3">完了</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary mt-3">保存</button>
                         </form>
                     </div>
                 </div>
@@ -109,9 +146,7 @@
         </div>
     </div>
 
-    <!-- 必要なJavaScript（Bootstrap依存） -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.6/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- 必要なJavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
