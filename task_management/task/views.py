@@ -3,6 +3,29 @@ from django.contrib.auth.decorators import login_required
 from .models import Task, TaskCategory
 from .forms import TaskForm
 
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import login as auth_login, logout as auth_logout
+from .forms import SignUpForm
+
+# ログイン系
+def signup_view(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=raw_password)
+            auth_login(request, user)
+            return redirect(to='/task/')
+    else:
+        form = SignUpForm()
+    return render(request, 'registration/signup.html', {'form': form})
+
+
+# 機能系
+@login_required
 def task_list(request):
     tasks = Task.objects.filter(user=request.user)
     progress = {
@@ -28,14 +51,17 @@ def task_list(request):
     }
     return render(request, 'task/index.html', context)
 
+@login_required
 def task_create(request):
     if request.method == "POST":
         form = TaskForm(request.POST)
+        print(request.POST)
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
+
             task.save()
-            return redirect(to='/task')
+            return redirect(to='/task/')
         else:
             # フォームエラーがある場合は、そのままタスクリストを再表示
             tasks = Task.objects.filter(user=request.user)
@@ -52,5 +78,6 @@ def task_create(request):
                 'sort_by': sort_by,
                 'form': form,  # エラーを含むフォームを再表示
             }
+            print(f'formerror:{context}')
             return render(request, 'task/index.html', context)
-    return redirect(to='/task')
+    return redirect(to='/task/')
